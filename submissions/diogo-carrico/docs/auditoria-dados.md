@@ -34,7 +34,7 @@
 
 ## Satisfação e tempo de resolução
 
-Correlação de Spearman entre horas de resolução e CSAT: ρ = 0,022 (p de permutação 0,25; faixa nula de 95%: -0,037 a 0,037; n = 2.769). Só com durações não negativas: ρ = 0,003 (p = 0,92; n = 1.404).
+Correlação de Spearman entre horas de resolução e CSAT: ρ = 0,022 (p de permutação 0,25; faixa nula de 95%: −0,037 a 0,037; n = 2.769). Só com durações não negativas: ρ = 0,003 (p = 0,92; n = 1.404).
 
 Uma correlação perto de zero, sozinha, não provaria nada; aqui ela é coerente com os outros oito sinais.
 

@@ -9,29 +9,11 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from support_triage.fmt import d, n, pct, pv
 from support_triage.paths import OUTPUTS_DIR, SOLUTION_DIR
 
 AUDIT = OUTPUTS_DIR / "audit"
 REPORT = SOLUTION_DIR.parent / "docs" / "auditoria-dados.md"
-
-
-def n(x: float) -> str:
-    """Integer with pt-BR thousands separator."""
-    return f"{int(x):,}".replace(",", ".")
-
-
-def d(x: float, places: int = 2) -> str:
-    """Decimal with pt-BR comma."""
-    return f"{x:.{places}f}".replace(".", ",")
-
-
-def pct(x: float, places: int = 1) -> str:
-    return f"{x * 100:.{places}f}".replace(".", ",") + "%"
-
-
-def pv(x: float) -> str:
-    """p-value with its comparison sign: '= 0,11', or '< 0,01' when smaller."""
-    return "< 0,01" if x < 0.01 else "= " + d(x, 2)
 
 
 def main() -> None:

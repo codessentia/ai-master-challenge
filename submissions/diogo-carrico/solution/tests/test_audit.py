@@ -22,7 +22,9 @@ def test_uniformity_accepts_equal_counts_and_rejects_skewed_ones():
 def test_spearman_permutation_detects_signal_and_its_absence():
     rng = np.random.default_rng(1)
     x = rng.normal(size=500)
-    strong = spearman_with_permutation(x, x + rng.normal(scale=0.5, size=500), n_perm=500)
+    strong = spearman_with_permutation(
+        x, x + rng.normal(scale=0.5, size=500), n_perm=500
+    )
     assert strong["rho"] > 0.8 and strong["permutation_p_value"] < 0.01
     none = spearman_with_permutation(x, rng.normal(size=500), n_perm=500)
     lo, hi = none["null_95pct_band"]
@@ -33,4 +35,6 @@ def test_spearman_permutation_detects_signal_and_its_absence():
 def test_spearman_permutation_is_reproducible():
     rng = np.random.default_rng(2)
     x, y = rng.normal(size=200), rng.normal(size=200)
-    assert spearman_with_permutation(x, y, n_perm=300) == spearman_with_permutation(x, y, n_perm=300)
+    assert spearman_with_permutation(x, y, n_perm=300) == spearman_with_permutation(
+        x, y, n_perm=300
+    )
