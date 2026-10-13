@@ -1,0 +1,26 @@
+# The upstream .gitignore excludes submissions/, so plain `git add` skips this folder.
+# Stage with ./stage.sh, which force-adds every file NOT matched by the patterns below.
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Secrets and local config
+.env
+.env.*
+*.pem
+kaggle.json
+access_token
+
+# Raw data lives in <repo>/datasets/ (never committed); local caches stay out too
+solution/outputs/cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,14 @@
+# Erros da IA — como percebi, causa raiz e correção
+
+> Um registro por erro. "Como percebi" diz quem pegou o erro: eu, uma verificação que eu pedi, ou um teste.
+
+| # | Data | Erro da IA | Como percebi | Causa raiz | Correção |
+|---|---|---|---|---|---|
+| E01 | 2026-10-13 | Plano inicial com 10 entregáveis | Revisão dos PRs que eu pedi (D03): submissões enxutas (#81 com 9.0, #104 "Excepcional") pontuaram tanto quanto ou mais que produtos grandes | A IA otimizou por volume, não pelo critério da G4 ("40 páginas onde 5 resolveriam") | Escopo cortado (D05) |
+| E02 | 2026-10-13 | Plano de gerar rascunhos de resposta a partir do campo "Resolution" do Dataset 1 | Revisão dos PRs: vários candidatos relatam que esse texto é gerado automaticamente (a confirmar na minha auditoria) | Plano feito antes de conhecer os dados | Rascunhos ancorados numa base de conhecimento curta, escrita e rotulada por mim, e avaliados |
+| E03 | 2026-10-13 | Plano de medir gargalos e desperdício em horas a partir das durações do Dataset 1 | Revisão dos PRs: 25 de 38 relatam ~49% dos timestamps invertidos (a confirmar) | Mesmo motivo do E02; contradiria o próprio veredito da auditoria | Gargalos e CSAT tratados como teste de hipótese nula; desperdício estimado de forma paramétrica, com premissas rotuladas |
+| E04 | 2026-10-13 | Comparação de três classificadores apresentada como diferencial | Revisão dos PRs: já feita (#127); o texto do Dataset 2 é stemizado, o que enviesa contra LLMs | A IA não conhecia o estado da arte dos outros candidatos | Uma tabela justa com a ressalva do stemming, combinada com a estimativa do teto de ruído de rótulo |
+| E05 | 2026-10-13 | Pesquisa de custos, rodada 1, com 28 lacunas (custo de tokens de raciocínio ignorado, sem opções de mercado intermediárias, sem análise de privacidade, faixas de GPU com aritmética errada) | Crítico de completude que pedi como parte da pesquisa | Cenário de tokens único; escopo de pesquisa incompleto | Rodada 2 de pesquisa e verificação |
+| E06 | 2026-10-13 | Síntese dos PRs com contagens erradas (24 vs. 25 PRs com timestamps invertidos; rótulo "Forte" atribuído a PRs sem rótulo; "enxuto vence grande" contrariado pelo #43) | Verificadores independentes que pedi | Listas montadas à mão pela IA sintetizadora | Contagens corrigidas antes de usar |
+| E07 | 2026-10-13 | Afirmações sobre o dataset do Challenge 003 feitas de memória no deck inicial | A própria IA sinalizou ao entregar | Conhecimento prévio não verificado | Marcado como "a confirmar" |
+| E08 | 2026-10-13 | `stage.sh` acusou todos os arquivos da submissão como "fora da pasta" | A própria verificação do script, na primeira execução | No Windows, o bash escreve o caminho como `/d/...` e o git como `D:/...`; a comparação de prefixos falhava | O script passou a pedir ao git o caminho relativo da pasta (`rev-parse --show-prefix`); `.gitattributes` mantém o `.sh` com finais de linha LF |
