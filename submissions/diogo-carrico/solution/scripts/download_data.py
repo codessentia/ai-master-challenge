@@ -13,7 +13,7 @@ from pathlib import Path
 import kagglehub
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from support_triage.paths import IT_TICKETS_DIR, TICKETS_DIR  # noqa: E402
+from support_triage.paths import IT_TICKETS_DIR, TICKETS_DIR
 
 DATASETS = {
     "suraj520/customer-support-ticket-dataset": TICKETS_DIR,
