@@ -108,6 +108,8 @@ def main() -> None:
             f"| {c} | {'—' if t >= 1.0 else d(t, 2)} | {n(v['predicted'])} | {n(v['routed'])} | {prec} |"
         )
 
+    e2e = dom["end_to_end"]
+    routed_classes = ", ".join(f"{c} {n(k)}" for c, k in e2e["routed_by_class"].items())
     shares = ", ".join(
         f"{c} {pct(v)}" for c, v in list(dom["predicted_class_shares"].items())[:3]
     )
@@ -128,7 +130,7 @@ def main() -> None:
 > Gerado por `solution/scripts/write_classifier_report.py` a partir de `solution/outputs/classifier/`.
 > Não editar à mão: rode `uv run python scripts/train_classifier.py` e depois este script.
 
-Um classificador TF-IDF + SVM linear acerta {pct(test["accuracy"])} dos tickets de TI do Dataset 2 (macro-F1 {pct(test["macro_f1"])}). Com um limiar por classe, ele roteia sozinho {pct(pcq["coverage"])} dos tickets com {pct(pcq["precision"])} de precisão, e o resto vai para a triagem humana. Nos tickets do Dataset 1 ele não serve, e um guarda de vocabulário barra {pct(dom["share_of_dataset1_stopped_by_guard"], 2)} deles antes de qualquer roteamento.
+Um classificador TF-IDF + SVM linear acerta {pct(test["accuracy"])} dos tickets de TI do Dataset 2 (macro-F1 {pct(test["macro_f1"])}). Com um limiar por classe, ele roteia sozinho {pct(pcq["coverage"])} dos tickets com {pct(pcq["precision"])} de precisão, e o resto vai para a triagem humana. Nos tickets do Dataset 1, de outra operação, ele não serve: a política, o guarda de vocabulário e os limiares mandam {pct(1 - dom["end_to_end"]["share_routed"])} deles para humanos.
 
 ## Dados e divisão
 
@@ -169,7 +171,9 @@ Limiares por classe, medidos no teste:
 
 O modelo aprendeu com tickets de TI e não com suporte ao cliente. Aplicado às {n(dom["tickets"])} descrições do Dataset 1, ele prevê {shares}, com confiança mediana de {pct(dom["median_confidence"])}. Sem proteção, {pct(dom["share_above_precision_threshold"])} passariam do limiar único e {pct(dom["share_above_per_class_thresholds"])} dos limiares por classe: confiança alta não garante que o ticket seja do domínio.
 
-O guarda mede quanto do vocabulário do ticket o modelo viu no treino. Na validação, a mediana é {pct(dom["vocabulary_coverage_median_dataset2_validation"], 0)}; no Dataset 1, {pct(dom["vocabulary_coverage_median_dataset1"])}. Com o corte em {pct(dom["guard_threshold_vocabulary_coverage"])} (o 1º percentil da validação), o guarda manda para humanos {pct(dom["share_of_dataset1_stopped_by_guard"], 2)} dos tickets do Dataset 1 e só {pct(dom["share_of_dataset2_test_stopped_by_guard"], 2)} dos tickets de teste do Dataset 2.
+O guarda mede quanto das palavras de conteúdo do ticket o modelo viu no treino; palavras gramaticais como “my” ou “the” não contam, porque o pré-processamento do Dataset 2 removeu umas e manteve outras. Na validação, a mediana é {pct(dom["vocabulary_coverage_median_dataset2_validation"], 0)}; no Dataset 1, {pct(dom["vocabulary_coverage_median_dataset1"])}. Com o corte em {pct(dom["guard_threshold_vocabulary_coverage"])} (o 1º percentil da validação), o guarda manda para humanos {pct(dom["share_of_dataset1_stopped_by_guard"])} dos tickets do Dataset 1 e só {pct(dom["share_of_dataset2_test_stopped_by_guard"])} dos tickets de teste do Dataset 2.
+
+De ponta a ponta (política, guarda, classificador e limiares), {n(e2e["routed"])} dos {n(dom["tickets"])} tickets do Dataset 1 ({pct(e2e["share_routed"])}) ainda seriam roteados sozinhos: {routed_classes}. São em geral textos genéricos com palavras de TI, como “suspeito de um problema de hardware”. A fila escolhida não é absurda, mas é a de outra operação: por isso o modelo precisa ser retreinado com os tickets da própria operação antes de qualquer uso real.
 """
     REPORT.write_text(md, encoding="utf-8")
     print(f"wrote {REPORT}")

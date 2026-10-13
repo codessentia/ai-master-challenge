@@ -3,7 +3,7 @@
 > Gerado por `solution/scripts/write_classifier_report.py` a partir de `solution/outputs/classifier/`.
 > Não editar à mão: rode `uv run python scripts/train_classifier.py` e depois este script.
 
-Um classificador TF-IDF + SVM linear acerta 86,7% dos tickets de TI do Dataset 2 (macro-F1 86,5%). Com um limiar por classe, ele roteia sozinho 64,9% dos tickets com 97,0% de precisão, e o resto vai para a triagem humana. Nos tickets do Dataset 1 ele não serve, e um guarda de vocabulário barra 99,99% deles antes de qualquer roteamento.
+Um classificador TF-IDF + SVM linear acerta 86,7% dos tickets de TI do Dataset 2 (macro-F1 86,5%). Com um limiar por classe, ele roteia sozinho 64,9% dos tickets com 97,0% de precisão, e o resto vai para a triagem humana. Nos tickets do Dataset 1, de outra operação, ele não serve: a política, o guarda de vocabulário e os limiares mandam 98,1% deles para humanos.
 
 ## Dados e divisão
 
@@ -85,4 +85,6 @@ Storage ficou em 94,5% no teste, abaixo do alvo, embora a validação garantisse
 
 O modelo aprendeu com tickets de TI e não com suporte ao cliente. Aplicado às 8.469 descrições do Dataset 1, ele prevê Hardware 83,5%, Access 7,7%, Miscellaneous 5,8%, com confiança mediana de 73,8%. Sem proteção, 50,6% passariam do limiar único e 20,8% dos limiares por classe: confiança alta não garante que o ticket seja do domínio.
 
-O guarda mede quanto do vocabulário do ticket o modelo viu no treino. Na validação, a mediana é 100%; no Dataset 1, 78,0%. Com o corte em 92,3% (o 1º percentil da validação), o guarda manda para humanos 99,99% dos tickets do Dataset 1 e só 0,95% dos tickets de teste do Dataset 2.
+O guarda mede quanto das palavras de conteúdo do ticket o modelo viu no treino; palavras gramaticais como “my” ou “the” não contam, porque o pré-processamento do Dataset 2 removeu umas e manteve outras. Na validação, a mediana é 100%; no Dataset 1, 81,8%. Com o corte em 91,0% (o 1º percentil da validação), o guarda manda para humanos 93,2% dos tickets do Dataset 1 e só 1,1% dos tickets de teste do Dataset 2.
+
+De ponta a ponta (política, guarda, classificador e limiares), 162 dos 8.469 tickets do Dataset 1 (1,9%) ainda seriam roteados sozinhos: Hardware 94, Access 67, HR Support 1. São em geral textos genéricos com palavras de TI, como “suspeito de um problema de hardware”. A fila escolhida não é absurda, mas é a de outra operação: por isso o modelo precisa ser retreinado com os tickets da própria operação antes de qualquer uso real.

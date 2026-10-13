@@ -692,7 +692,7 @@
     "model": {
       "model": "random forest on all variables, 5-fold cross-validation",
       "mae_model": 1.2220111370796811,
-      "mae_model_sd": 0.006945800084248893,
+      "mae_model_sd": 0.0069458000842489665,
       "mae_predicting_the_average": 1.188872116246964,
       "improvement_over_average": -0.033139020832717136
     },

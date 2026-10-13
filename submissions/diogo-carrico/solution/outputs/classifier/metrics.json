@@ -102,7 +102,7 @@
   "calibration": {
     "method": "sigmoid, fitted on the calibration split",
     "ece_test_before": null,
-    "ece_test_after": 0.036335537598328575
+    "ece_test_after": 0.036335559912744814
   },
   "thresholds": {
     "target_precision": 0.95,
@@ -331,13 +331,28 @@
       "Internal Project": 0.0011807769512339119,
       "Storage": 0.0009446215609871296
     },
-    "median_confidence": 0.7375878045829188,
+    "median_confidence": 0.73758791752277,
     "share_above_precision_threshold": 0.5061990789939781,
     "share_above_per_class_thresholds": 0.2079348211122919,
     "vocabulary_coverage_median_dataset2_validation": 1.0,
-    "vocabulary_coverage_median_dataset1": 0.7804878048780488,
-    "guard_threshold_vocabulary_coverage": 0.9230769230769231,
-    "share_of_dataset1_stopped_by_guard": 0.9998819223048766,
-    "share_of_dataset2_test_stopped_by_guard": 0.009475923419067878
+    "vocabulary_coverage_median_dataset1": 0.8181818181818182,
+    "guard_threshold_vocabulary_coverage": 0.9098989898989899,
+    "share_of_dataset1_stopped_by_guard": 0.9323414806942969,
+    "share_of_dataset2_test_stopped_by_guard": 0.01063624057242313,
+    "end_to_end": {
+      "routed": 162,
+      "share_routed": 0.019128586609989374,
+      "routed_by_class": {
+        "Hardware": 94,
+        "Access": 67,
+        "HR Support": 1
+      },
+      "to_people_by_reason": {
+        "Fora do domínio": 7710,
+        "Confiança abaixo do limiar": 379,
+        "Política": 202,
+        "Classe nunca roteada sozinha": 16
+      }
+    }
   }
 }

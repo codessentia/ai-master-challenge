@@ -29,7 +29,9 @@ from support_triage.classifier import (
     split_indices,
     threshold_for_precision,
 )
+from support_triage.classifier import vocabulary_coverage as word_coverage
 from support_triage.paths import IT_TICKETS_DIR, OUTPUTS_DIR, TICKETS_DIR
+from support_triage.triage import triage
 
 OUT = OUTPUTS_DIR / "classifier"
 MODEL_DIR = OUTPUTS_DIR / "model"
@@ -39,10 +41,8 @@ TRIAGE_MINUTES, REWORK_MINUTES = 4, 10  # base values of the waste model
 
 
 def vocabulary_coverage(texts: pd.Series, vocab: set[str]) -> np.ndarray:
-    """Share of each text's tokens that the model saw in training."""
-    return np.array(
-        [np.mean([t in vocab for t in s.split()]) if s else 0.0 for s in texts]
-    )
+    """Share of each text's content words that the model saw in training (same rule as the demo)."""
+    return np.array([word_coverage(s, vocab) for s in texts])
 
 
 def main() -> None:
@@ -139,10 +139,18 @@ def main() -> None:
         }
     ).to_csv(CACHE / "test_predictions.csv", index=False)
     # The words that weigh most for each class: a reading guide for the human label review.
-    clf, terms = model.named_steps["clf"], model.named_steps["tfidf"].get_feature_names_out()
+    clf, terms = (
+        model.named_steps["clf"],
+        model.named_steps["tfidf"].get_feature_names_out(),
+    )
     if hasattr(clf, "coef_"):
-        class_terms = {c: [str(t) for t in terms[np.argsort(clf.coef_[i])[::-1][:15]]] for i, c in enumerate(clf.classes_)}
-        (OUT / "class_terms.json").write_text(json.dumps(class_terms, indent=2, ensure_ascii=False), encoding="utf-8")
+        class_terms = {
+            c: [str(t) for t in terms[np.argsort(clf.coef_[i])[::-1][:15]]]
+            for i, c in enumerate(clf.classes_)
+        }
+        (OUT / "class_terms.json").write_text(
+            json.dumps(class_terms, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
     uncal_conf = None
     if hasattr(model, "predict_proba"):
         pu = model.predict_proba(xs["test"])
@@ -152,12 +160,11 @@ def main() -> None:
 
     # 7. domain shift: the Dataset 2 model on Dataset 1 descriptions
     d1 = pd.read_csv(TICKETS_DIR / "customer_support_tickets.csv")
-    x1 = (
-        d1["Ticket Description"]
-        .fillna("")
-        .str.replace(r"\{[a-z_]+\}", " ", regex=True)
-        .map(normalize_text)
+    # Raw text (placeholders removed) for the policy rules, normalized text for the model.
+    d1_raw = (
+        d1["Ticket Description"].fillna("").str.replace(r"\{[a-z_]+\}", " ", regex=True)
     )
+    x1 = d1_raw.map(normalize_text)
     p1 = calibrated.predict_proba(x1)
     vocab = set(model.named_steps["tfidf"].vocabulary_)
     cov_val = vocabulary_coverage(xs["validation"], vocab)
@@ -225,6 +232,34 @@ def main() -> None:
             ),
         },
     }
+    artifact = {
+        "model": calibrated,
+        "thresholds": t_class,
+        "guard": guard,
+        "vocabulary": vocab,
+    }
+
+    # End to end: every Dataset 1 ticket through the full triage (policy, guard, classifier, thresholds).
+    decisions = [triage(t, artifact) for t in d1_raw]
+    routed_d1 = [d for d in decisions if d.decision == "rotear"]
+    result["domain_shift_dataset1"]["end_to_end"] = {
+        "routed": len(routed_d1),
+        "share_routed": len(routed_d1) / len(decisions),
+        "routed_by_class": pd.Series([d.queue for d in routed_d1])
+        .value_counts()
+        .to_dict(),
+        "to_people_by_reason": pd.Series(
+            [
+                d.reason.split(":")[0]
+                if d.reason.startswith(("Política", "Fora", "Classe"))
+                else "Confiança abaixo do limiar"
+                for d in decisions
+                if d.decision == "humano"
+            ]
+        )
+        .value_counts()
+        .to_dict(),
+    }
     (OUT / "metrics.json").write_text(
         json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8"
     )
@@ -233,15 +268,7 @@ def main() -> None:
         index=classes,
         columns=classes,
     ).to_csv(OUT / "confusion_matrix.csv")
-    joblib.dump(
-        {
-            "model": calibrated,
-            "thresholds": t_class,
-            "guard": guard,
-            "vocabulary": vocab,
-        },
-        MODEL_DIR / "triage.joblib",
-    )
+    joblib.dump(artifact, MODEL_DIR / "triage.joblib")
     print(
         f"chosen {best}; test accuracy {report['accuracy']:.4f}, macro-F1 {report['macro_f1']:.4f}"
     )

@@ -12,7 +12,7 @@ from scipy.sparse.csgraph import connected_components
 from scipy.stats import norm
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.decomposition import TruncatedSVD
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS, TfidfVectorizer
 from sklearn.frozen import FrozenEstimator
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, precision_recall_fscore_support
@@ -34,6 +34,17 @@ def normalize_text(text: str) -> str:
     """Bring raw ticket text to Dataset 2's form: lowercase, no digits or punctuation, single spaces."""
     text = _NON_LETTERS.sub(" ", str(text).lower())
     return _SPACES.sub(" ", text).strip()
+
+
+def vocabulary_coverage(text: str, vocab: set[str]) -> float:
+    """Share of the ticket's content words that the model saw in training.
+
+    English stopwords are ignored: Dataset 2's preprocessing removed some of them ("my") and kept
+    others ("for"), so they say nothing about whether a ticket belongs to the domain.
+    A ticket with no content words gets 0 and goes to a person.
+    """
+    words = [w for w in normalize_text(text).split() if w not in ENGLISH_STOP_WORDS]
+    return sum(w in vocab for w in words) / len(words) if words else 0.0
 
 
 # ---------------------------------------------------------------- near duplicates and split
