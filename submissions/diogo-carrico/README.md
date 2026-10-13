@@ -1,9 +1,9 @@
-# Submissão — Diogo Carriço — Challenge 002
+# Submissão — Diogo da Silva Carrico — Challenge 002
 
 ## Sobre mim
 
-- **Nome:** Diogo Carriço
-- **LinkedIn:**
+- **Nome:** Diogo da Silva Carrico
+- **LinkedIn:** [linkedin.com/in/diogo-carrico](https://www.linkedin.com/in/diogo-carrico)
 - **Challenge escolhido:** 002 — Redesign de Suporte
 
 ---
