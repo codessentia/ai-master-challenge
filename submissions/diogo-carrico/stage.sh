@@ -26,7 +26,9 @@ fi
 big=""
 while IFS= read -r f; do
   size=$(git cat-file -s ":$f" 2>/dev/null || echo 0)
-  if ((size > 2000000)); then big+="$f ($size bytes)"$'\n'; fi
+  limit=2000000
+  [[ "$f" == *.pdf ]] && limit=5000000 # documents may be larger; models and data may not
+  if ((size > limit)); then big+="$f ($size bytes)"$'\n'; fi
 done < <(git diff --cached --name-only --diff-filter=AM)
 if [[ -n "$big" ]]; then
   echo "Refusing: staged files over 2 MB (models and data stay out of git):" >&2

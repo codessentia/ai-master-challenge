@@ -175,4 +175,4 @@ Os 14 erros estão em [`process-log/erros-da-ia.md`](process-log/erros-da-ia.md)
 
 ---
 
-_Submissão enviada em: [data]_
+_Submissão enviada em: 13/10/2026_
