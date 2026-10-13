@@ -16,8 +16,12 @@ __pycache__/
 kaggle.json
 access_token
 
-# Raw data lives in <repo>/datasets/ (never committed); local caches stay out too
-solution/outputs/cache/
+# Raw data lives in <repo>/datasets/ (never committed); local caches stay out too.
+# The "**/" prefix matters: stage.sh reads this file relative to the repo root.
+**/solution/outputs/cache/
+# The trained model is rebuilt by scripts/train_classifier.py; binaries stay out of git
+**/solution/outputs/model/
+*.joblib
 
 # OS / editor
 .DS_Store

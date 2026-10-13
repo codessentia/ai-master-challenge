@@ -68,6 +68,35 @@ ASSUMPTIONS: dict[str, Assumption] = {
 }
 
 
+def with_measured_routing(
+    metrics: dict, assumptions: dict[str, Assumption] = ASSUMPTIONS
+) -> dict[str, Assumption]:
+    """Replace the assumed routing share and misroute rate with what the classifier measured on the test set
+    (per-class thresholds). The range keeps the alternatives: Diogo's prediction P5 and the single-threshold rule."""
+    th = metrics["thresholds"]
+    per_class = th["test_at_per_class_thresholds"]
+    single = th["test_at_precision_threshold"]
+    lo_prec, hi_prec = per_class["precision_ci95"]
+    out = dict(assumptions)
+    out["auto_route_share"] = Assumption(
+        assumptions["auto_route_share"].base,
+        per_class["coverage"],
+        single["coverage"],
+        "fração",
+        "Medido no Dataset 2 (tickets de TI): cobertura no teste com limiares por classe. Numa operação de suporte "
+        "ao cliente só vale depois de treinar com os tickets dela. Baixo: previsão P5 do Diogo. "
+        "Alto: limiar único, que deixa Hardware abaixo de 95% de precisão",
+    )
+    out["misroute_rate"] = Assumption(
+        1 - hi_prec,
+        1 - per_class["precision"],
+        1 - lo_prec,
+        "fração",
+        "Medido no Dataset 2: 1 − precisão dos tickets roteados no teste, com o intervalo de 95%",
+    )
+    return out
+
+
 def hours_saved(p: dict[str, float]) -> float:
     """Triage hours saved per month, net of the rework that misrouted tickets cause."""
     routed = p["tickets_per_month"] * p["auto_route_share"]

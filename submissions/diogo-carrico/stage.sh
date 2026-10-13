@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Stage this submission despite the upstream rule that ignores submissions/.
 # Force-adds new and changed files under this folder, skipping anything matched by ./.gitignore,
-# then refuses to continue if a staged path falls outside the folder or looks like a secret.
+# then refuses to continue if a staged path falls outside the folder, is over 2 MB or looks like a secret.
 set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -20,6 +20,17 @@ outside=$(git diff --cached --name-only | grep -v "^$rel/" || true)
 if [[ -n "$outside" ]]; then
   echo "Refusing: staged files outside $rel/ (G4 rejects PRs that touch other files):" >&2
   echo "$outside" >&2
+  exit 1
+fi
+
+big=""
+while IFS= read -r f; do
+  size=$(git cat-file -s ":$f" 2>/dev/null || echo 0)
+  if ((size > 2000000)); then big+="$f ($size bytes)"$'\n'; fi
+done < <(git diff --cached --name-only --diff-filter=AM)
+if [[ -n "$big" ]]; then
+  echo "Refusing: staged files over 2 MB (models and data stay out of git):" >&2
+  printf '%s' "$big" >&2
   exit 1
 fi
 

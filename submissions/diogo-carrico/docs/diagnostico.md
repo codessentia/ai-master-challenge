@@ -3,7 +3,7 @@
 > Gerado por `solution/scripts/write_diagnosis_report.py` a partir de `solution/outputs/diagnosis/diagnosis.json`.
 > Não editar à mão: rode `uv run python scripts/run_diagnosis.py` e depois este script.
 
-Nesta base não há gargalo nem fator de satisfação detectável, e o desperdício não pode ser medido. A estimativa paramétrica dá 73 horas de triagem recuperáveis por mês (R$ 3.281) no cenário base. O maior desperdício de uma operação real, transferências e espera, não está registrado nos dados.
+Nesta base não há gargalo nem fator de satisfação detectável, e o desperdício não pode ser medido. A estimativa paramétrica dá 100 horas de triagem recuperáveis por mês (R$ 4.502) no cenário base. O maior desperdício de uma operação real, transferências e espera, não está registrado nos dados.
 
 ## As três perguntas do Diretor
 
@@ -11,7 +11,7 @@ Nesta base não há gargalo nem fator de satisfação detectável, e o desperdí
 
 **2. O que impacta a satisfação?** Nada que se possa medir aqui. Nenhuma das 8 variáveis se associa à nota (o maior q é 0,83). Um modelo com todas as variáveis erra mais do que chutar a média (1,22 contra 1,19 pontos de erro médio). Uma diferença de 0,27 ponto entre dois canais teria sido detectada.
 
-**3. Quanto estamos desperdiçando?** A base não permite medir: não há data de abertura, e em 49,3% dos tickets fechados a resolução vem antes da primeira resposta. A estimativa paramétrica do tempo de triagem que a IA pode recuperar vai de 2 a 172 horas por mês (R$ 66 a R$ 10.325), com 73 horas (R$ 3.281, 0,46 pessoa em tempo integral) no cenário base. A premissa que mais pesa é “minutos de triagem manual por ticket”, que nunca foi medida. Triagem é uma parte pequena do problema: na experiência do Diogo (hipótese 0.2), o tempo some em transferências, falta de contexto e espera por autorização.
+**3. Quanto estamos desperdiçando?** A base não permite medir: não há data de abertura, e em 49,3% dos tickets fechados a resolução vem antes da primeira resposta. A estimativa paramétrica do tempo de triagem que a IA pode recuperar vai de 8 a 182 horas por mês (R$ 263 a R$ 10.908), com 100 horas (R$ 4.502, 0,63 pessoa em tempo integral) no cenário base. A premissa que mais pesa é “minutos de triagem manual por ticket”, que nunca foi medida. Triagem é uma parte pequena do problema: na experiência do Diogo (hipótese 0.2), o tempo some em transferências, falta de contexto e espera por autorização.
 
 ## Como ler os testes
 
@@ -107,28 +107,28 @@ Horas recuperadas por mês = tickets × parcela roteada pela IA × minutos de tr
 | Premissa | Baixo | Base | Alto | Fonte |
 | --- | --- | --- | --- | --- |
 | Tickets por mês (tickets/mês) | 706 | 2.500 | 2.500 | Brief: 30.000/ano. Baixo: os 8.469 registros do Dataset 1 tratados como um ano |
-| Parcela roteada automaticamente (fração) | 40% | 50% | 70% | Previsão P5 do Diogo (50%); será trocada pela cobertura medida no classificador (fase 5) |
+| Parcela roteada automaticamente (fração) | 50% | 65% | 74% | Medido no Dataset 2 (tickets de TI): cobertura no teste com limiares por classe. Numa operação de suporte ao cliente só vale depois de treinar com os tickets dela. Baixo: previsão P5 do Diogo. Alto: limiar único, que deixa Hardware abaixo de 95% de precisão |
 | Minutos de triagem manual por ticket (min/ticket) | 2 | 4 | 6 | Premissa: tempo de ler, classificar e encaminhar um ticket. Não medido; validar cronometrando uma semana de triagem |
-| Parcela roteada errado pela IA (fração) | 2% | 5% | 8% | Premissa ligada ao alvo de precisão de 95% (hipótese 3.2 do Diogo) |
+| Parcela roteada errado pela IA (fração) | 2% | 3% | 4% | Medido no Dataset 2: 1 − precisão dos tickets roteados no teste, com o intervalo de 95% |
 | Minutos de retrabalho por erro (min/erro) | 5 | 10 | 20 | Premissa: retriagem e transferência de um ticket mal roteado |
 | Custo por hora de um agente (R$/hora) | R$ 35 | R$ 45 | R$ 60 | Premissa: custo por hora de um agente, com encargos. Validar com RH |
 
 | Cenário | Horas por mês | R$ por mês | Pessoas em tempo integral |
 | --- | --- | --- | --- |
-| Pessimista | 2 | R$ 66 | 0,01 |
-| Base | 73 | R$ 3.281 | 0,46 |
-| Otimista | 172 | R$ 10.325 | 1,08 |
+| Pessimista | 8 | R$ 263 | 0,05 |
+| Base | 100 | R$ 4.502 | 0,63 |
+| Otimista | 182 | R$ 10.908 | 1,14 |
 
-Sensibilidade: cada premissa variada sozinha, com as outras no valor base (R$ 3.281 por mês).
+Sensibilidade: cada premissa variada sozinha, com as outras no valor base (R$ 4.502 por mês).
 
 | Premissa | R$/mês no valor baixo | R$/mês no valor alto | Variação |
 | --- | --- | --- | --- |
-| Minutos de triagem manual por ticket | R$ 1.406 | R$ 5.156 | R$ 3.750 |
-| Tickets por mês | R$ 927 | R$ 3.281 | R$ 2.355 |
-| Parcela roteada automaticamente | R$ 2.625 | R$ 4.594 | R$ 1.969 |
-| Custo por hora de um agente | R$ 2.552 | R$ 4.375 | R$ 1.823 |
-| Minutos de retrabalho por erro | R$ 3.516 | R$ 2.812 | R$ 703 |
-| Parcela roteada errado pela IA | R$ 3.562 | R$ 3.000 | R$ 562 |
+| Minutos de triagem manual por ticket | R$ 2.070 | R$ 6.934 | R$ 4.865 |
+| Tickets por mês | R$ 1.271 | R$ 4.502 | R$ 3.231 |
+| Custo por hora de um agente | R$ 3.502 | R$ 6.003 | R$ 2.501 |
+| Parcela roteada automaticamente | R$ 3.470 | R$ 5.153 | R$ 1.683 |
+| Minutos de retrabalho por erro | R$ 4.683 | R$ 4.139 | R$ 544 |
+| Parcela roteada errado pela IA | R$ 4.566 | R$ 4.425 | R$ 141 |
 
 Fora da conta, por falta de dados: redução de transferências quando o primeiro roteamento acerta, tempo de espera e retrabalho por falta de contexto. Na hipótese 0.2 do Diogo, é aí que está o maior desperdício.
 
