@@ -19,3 +19,4 @@
 | D12 | 2026-10-13 | Base de conhecimento dos rascunhos (X2) | IA | Esboçar 11 artigos para eu revisar e assumir | A IA esboça; eu reviso e assumo | |
 | D13 | 2026-10-13 | Corte de escopo | Eu | Depois do meu alerta, a IA listou o que cortar: revisão de rótulos (X1), rascunhos com LLM (X2), comparação com embeddings, LLM e português, e as dependências ligadas a eles | Cortar e registrar como sugestão para análise posterior, com nota explicativa (`docs/proximos-passos.md`); fechar em 3 etapas: proposta de automação e demo, README e sumário executivo, PR. Isso substitui D10, D11 e D12 | to achando que complicamos demais. |
 | D14 | 2026-10-13 | Sumário executivo | Eu | — | Além do README, um sumário executivo para a reunião do conselho técnico | |
+| D15 | 2026-10-13 | Apresentação na submissão | Eu | Uma apresentação nova da solução, a inicial dos 4 desafios, ou as duas | A inicial dos 4 desafios, no process-log, como evidência de como o desafio foi escolhido | |

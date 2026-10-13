@@ -13,7 +13,7 @@
 | P4 | ~20% dos erros auditados ligados a ruído de rótulo | Não testada: cortada do escopo (D13). Evidência parcial: 105 grupos de quase-duplicatas (617 tickets) com rótulos diferentes | Não testada | `metrics.json` → `data.near_duplicates`; `docs/proximos-passos.md` |
 | P5 | ~50% dos tickets roteáveis com precisão ≥ 95% | 64,9% com limiares por classe (precisão 97,0%, IC 96,4% a 97,5%); 74,2% com limiar único, que deixa Hardware em 92,9% | Não: a IA roteia mais do que eu previ | `metrics.json` → `thresholds` |
 | P6 | Queda de ~40 p.p. em português | Não testada: cortada do escopo (D13) | Não testada | `docs/proximos-passos.md` |
-| P7 | Construir fica mais barato a partir de ~20 mil tickets/mês | Pendente (comparação de custos no README) | | |
+| P7 | Construir fica mais barato a partir de ~20 mil tickets/mês | Não testada: o comparativo virou uma tabela de custos no README, sem cálculo de ponto de equilíbrio (D13). A triagem construída custa cerca de US$ 8 por mês de infraestrutura, quase todo fixo; o custo real é o de manutenção | Não testada | `README.md`, seção Custos |
 | P8 | ~65% dos rascunhos aprovados sem edição | Não testada: cortada do escopo (D13) | Não testada | `docs/proximos-passos.md` |
 
 ## Hipóteses qualitativas
