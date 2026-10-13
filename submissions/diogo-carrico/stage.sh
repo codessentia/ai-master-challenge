@@ -34,7 +34,8 @@ if [[ -n "$big" ]]; then
   exit 1
 fi
 
-secrets=$(git diff --cached -U0 | grep -nE '(sk-[A-Za-z0-9_-]{20,}|sk-ant-[A-Za-z0-9_-]{20,}|AIza[0-9A-Za-z_-]{35}|KGAT_[0-9A-Za-z]{16,}|"key"\s*:\s*"[0-9a-f]{32}")' || true)
+# Key prefixes must start a token: "zendesk-ai-pricing" contains "sk-" but is not a key.
+secrets=$(git diff --cached -U0 | grep -nE '(^|[^A-Za-z0-9])(sk-[A-Za-z0-9_-]{20,}|sk-ant-[A-Za-z0-9_-]{20,}|AIza[0-9A-Za-z_-]{35}|KGAT_[0-9A-Za-z]{16,}|gh[opsu]_[A-Za-z0-9]{30,})|"key"\s*:\s*"[0-9a-f]{32}"' || true)
 if [[ -n "$secrets" ]]; then
   echo "Refusing: something that looks like an API key is staged:" >&2
   echo "$secrets" >&2

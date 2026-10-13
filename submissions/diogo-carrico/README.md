@@ -123,7 +123,7 @@ Os relatórios em `docs/` são regenerados pelos scripts `write_*_report.py`.
 
 | Decisões registradas | Erros da IA registrados | Previsões feitas antes dos dados | Commits | Testes |
 | --- | --- | --- | --- | --- |
-| 15 ([decisoes.md](process-log/decisoes.md)) | 13 ([erros-da-ia.md](process-log/erros-da-ia.md)) | 8 ([previsoes-resultados.md](process-log/previsoes-resultados.md)) | ver `git log` | 41 |
+| 15 ([decisoes.md](process-log/decisoes.md)) | 14 ([erros-da-ia.md](process-log/erros-da-ia.md)) | 8 ([previsoes-resultados.md](process-log/previsoes-resultados.md)) | ver `git log` | 41 |
 
 ### Ferramentas usadas
 
@@ -145,7 +145,7 @@ Os relatórios em `docs/` são regenerados pelos scripts `write_*_report.py`.
 
 ### Onde a IA errou e como corrigi
 
-Os 13 erros estão em [`process-log/erros-da-ia.md`](process-log/erros-da-ia.md). Os principais:
+Os 14 erros estão em [`process-log/erros-da-ia.md`](process-log/erros-da-ia.md). Os principais:
 
 - **O plano inicial tinha 10 entregas** e usava dados que depois se mostraram sintéticos (E01 a E03). A revisão dos PRs que eu pedi mostrou o problema.
 - **O escopo voltou a crescer** depois do primeiro corte (E12). Fui eu que percebi: "to achando que complicamos demais".
