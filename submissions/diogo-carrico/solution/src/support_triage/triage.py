@@ -1,4 +1,4 @@
-"""Triage a ticket: never-automate policy, domain guard, classifier and per-class threshold.
+"""Triage a ticket: never-automate policy, domain guard, classifier, per-class threshold and enabled classes.
 
 Command line (from the solution folder, after scripts/train_classifier.py):
     uv run python -m support_triage.triage "texto do ticket"
@@ -79,6 +79,13 @@ def triage(text: str, artifact: dict) -> Decision:
             "humano",
             "Triagem humana",
             f"Confiança {conf:.0%} abaixo do limiar da classe ({threshold:.0%})",
+            **base,
+        )
+    if cls not in artifact["enabled_classes"]:
+        return Decision(
+            "humano",
+            "Triagem humana",
+            f"Confiança {conf:.0%} acima do limiar, mas a classe está em piloto: não provou {artifact['target_precision']:.0%} de precisão no teste",
             **base,
         )
     return Decision(

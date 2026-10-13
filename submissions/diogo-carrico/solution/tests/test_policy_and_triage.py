@@ -77,6 +77,8 @@ def artifact():
         "thresholds": {"Hardware": 0.6, "Access": 0.99},
         "guard": 0.9,
         "vocabulary": vocab,
+        "enabled_classes": ["Hardware", "Access"],
+        "target_precision": 0.95,
     }
 
 
@@ -90,6 +92,13 @@ def test_triage_holds_back_below_class_threshold(artifact):
     assert (
         d.decision == "humano" and d.predicted_class == "Access" and d.confidence < 0.99
     )
+
+
+def test_triage_holds_back_class_still_in_pilot(artifact):
+    in_pilot = {**artifact, "enabled_classes": ["Access"]}
+    d = triage("laptop screen broken", in_pilot)
+    assert d.decision == "humano" and d.predicted_class == "Hardware"
+    assert "piloto" in d.reason
 
 
 def test_triage_guard_stops_out_of_domain_text(artifact):

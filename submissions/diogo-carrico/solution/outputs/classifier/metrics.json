@@ -102,7 +102,7 @@
   "calibration": {
     "method": "sigmoid, fitted on the calibration split",
     "ece_test_before": null,
-    "ece_test_after": 0.036335559912744814
+    "ece_test_after": 0.03633552847443987
   },
   "thresholds": {
     "target_precision": 0.95,
@@ -331,7 +331,7 @@
       "Internal Project": 0.0011807769512339119,
       "Storage": 0.0009446215609871296
     },
-    "median_confidence": 0.73758791752277,
+    "median_confidence": 0.7375879092708382,
     "share_above_precision_threshold": 0.5061990789939781,
     "share_above_per_class_thresholds": 0.2079348211122919,
     "vocabulary_coverage_median_dataset2_validation": 1.0,
@@ -340,18 +340,105 @@
     "share_of_dataset1_stopped_by_guard": 0.9323414806942969,
     "share_of_dataset2_test_stopped_by_guard": 0.01063624057242313,
     "end_to_end": {
-      "routed": 162,
-      "share_routed": 0.019128586609989374,
+      "routed": 161,
+      "share_routed": 0.01901050891486598,
       "routed_by_class": {
         "Hardware": 94,
-        "Access": 67,
-        "HR Support": 1
+        "Access": 67
       },
       "to_people_by_reason": {
         "Fora do domínio": 7710,
         "Confiança abaixo do limiar": 379,
         "Política": 202,
-        "Classe nunca roteada sozinha": 16
+        "Classe nunca roteada sozinha": 16,
+        "Classe em piloto": 1
+      }
+    }
+  },
+  "end_to_end_dataset2_test": {
+    "enabled_classes": [
+      "Access",
+      "Hardware",
+      "Miscellaneous",
+      "Purchase"
+    ],
+    "enabling_rule": "limite inferior do IC 95% da precisão no teste >= 95%",
+    "note": "O texto do Dataset 2 já vem pré-processado; a política roda sobre ele",
+    "coverage": 0.4351189325082189,
+    "routed": 2250,
+    "precision": 0.9768888888888889,
+    "precision_ci95": [
+      0.9698198005637634,
+      0.9823323535291332
+    ],
+    "routed_by_class": {
+      "Access": {
+        "routed": 564,
+        "precision": 0.9698581560283688,
+        "precision_ci95": [
+          0.9522619473546318,
+          0.9810971650650845
+        ]
+      },
+      "Hardware": {
+        "routed": 744,
+        "precision": 0.9704301075268817,
+        "precision_ci95": [
+          0.9556346044756003,
+          0.9803926667375555
+        ]
+      },
+      "Miscellaneous": {
+        "routed": 294,
+        "precision": 0.9931972789115646,
+        "precision_ci95": [
+          0.9755399111850729,
+          0.9981324618561336
+        ]
+      },
+      "Purchase": {
+        "routed": 648,
+        "precision": 0.9830246913580247,
+        "precision_ci95": [
+          0.9698609206410443,
+          0.990495300229831
+        ]
+      }
+    },
+    "to_people_by_reason": {
+      "Confiança abaixo do limiar": 1637,
+      "Classe em piloto": 1065,
+      "Classe nunca roteada sozinha": 138,
+      "Fora do domínio": 54,
+      "Política": 27
+    },
+    "administrative_rights_routed_elsewhere": {
+      "true_administrative_rights": 176,
+      "routed_on_their_own": 5,
+      "by_queue": {
+        "Hardware": 5
+      },
+      "texts": [
+        "kb patches with big issues kb patches big issues hello please take consideration article decline two kb kb big impact users where cells form word disappear article after installing kb kb merged table cells work correctly word questions about please let decline two also users call because issues related word please two patches currently fix solution two regards senior engineer",
+        "social synchronizing issues friday pm social synchronizing issues dear facing issues regarding social job advertisements posted visible has happened several cases making difficult colleagues referral purposes also colleagues facing errors upload recommended certain job vacancy usually problem recognize format file please solving issue possible issue has proven quite uncomfortable discouraging colleagues provide referrals due malfunctioning which problematic provide additional details needed",
+        "builds not working builds working dear please log ticket with or help get boot back up currently working have tried over last couple days rebuild couple even ones but without any success currently fails after saying checking connections splash screen after usual black screen where tries find server etc available for any other info might be needed thanks kind regards engineer en",
+        "action required apply windows updates immediately sent wednesday re action required apply updates immediately hello have requested updates thought failed install following one attached please advice thank you",
+        "one of the monitors are not working correctly problem middle screen"
+      ]
+    },
+    "if_every_class_is_enabled": {
+      "coverage": 0.6410752272287759,
+      "routed": 3315,
+      "precision": 0.9704374057315234,
+      "precision_ci95": [
+        0.9641047332930709,
+        0.9756810439727991
+      ],
+      "to_people_by_reason": {
+        "Confiança abaixo do limiar": 1637,
+        "Classe nunca roteada sozinha": 138,
+        "Fora do domínio": 54,
+        "Política": 27
       }
     }
   }

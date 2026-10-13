@@ -26,19 +26,17 @@ def test_per_class_thresholds_and_route():
 
 def test_with_measured_routing_replaces_share_and_misroute_rate():
     metrics = {
-        "thresholds": {
-            "test_at_per_class_thresholds": {
-                "coverage": 0.65,
-                "precision": 0.97,
-                "precision_ci95": [0.96, 0.98],
-            },
-            "test_at_precision_threshold": {"coverage": 0.74},
+        "end_to_end_dataset2_test": {
+            "coverage": 0.45,
+            "precision": 0.97,
+            "precision_ci95": [0.96, 0.98],
+            "if_every_class_is_enabled": {"coverage": 0.64},
         }
     }
     a = with_measured_routing(metrics)
-    assert a["auto_route_share"].base == 0.65
-    assert a["auto_route_share"].low == ASSUMPTIONS["auto_route_share"].base
-    assert a["auto_route_share"].high == 0.74
+    assert a["auto_route_share"].base == 0.45
+    assert a["auto_route_share"].low == ASSUMPTIONS["auto_route_share"].low
+    assert a["auto_route_share"].high == 0.64
     assert a["misroute_rate"].base == pytest.approx(0.03)
     assert a["misroute_rate"].low == pytest.approx(0.02)
     assert a["misroute_rate"].high == pytest.approx(0.04)

@@ -692,7 +692,7 @@
     "model": {
       "model": "random forest on all variables, 5-fold cross-validation",
       "mae_model": 1.2220111370796811,
-      "mae_model_sd": 0.0069458000842489665,
+      "mae_model_sd": 0.006945800084248893,
       "mae_predicting_the_average": 1.188872116246964,
       "improvement_over_average": -0.033139020832717136
     },
@@ -708,11 +708,11 @@
         "source": "Brief: 30.000/ano. Baixo: os 8.469 registros do Dataset 1 tratados como um ano"
       },
       "auto_route_share": {
-        "low": 0.5,
-        "base": 0.648617288725585,
-        "high": 0.7424095919551345,
+        "low": 0.4,
+        "base": 0.4351189325082189,
+        "high": 0.6410752272287759,
         "unit": "fração",
-        "source": "Medido no Dataset 2 (tickets de TI): cobertura no teste com limiares por classe. Numa operação de suporte ao cliente só vale depois de treinar com os tickets dela. Baixo: previsão P5 do Diogo. Alto: limiar único, que deixa Hardware abaixo de 95% de precisão"
+        "source": "Medido no Dataset 2 (tickets de TI): fluxo completo da demo no teste, só com as classes que provaram 95% de precisão. Numa operação de suporte ao cliente só vale depois de treinar com os tickets dela. Baixo: premissa original. Alto: o mesmo fluxo se o piloto comprovar as classes que faltam"
       },
       "triage_minutes": {
         "low": 2,
@@ -722,11 +722,11 @@
         "source": "Premissa: tempo de ler, classificar e encaminhar um ticket. Não medido; validar cronometrando uma semana de triagem"
       },
       "misroute_rate": {
-        "low": 0.024575362085926478,
-        "base": 0.029815146094215872,
-        "high": 0.036130737746519315,
+        "low": 0.017667646470866827,
+        "base": 0.023111111111111082,
+        "high": 0.03018019943623662,
         "unit": "fração",
-        "source": "Medido no Dataset 2: 1 − precisão dos tickets roteados no teste, com o intervalo de 95%"
+        "source": "Medido no Dataset 2: 1 − precisão dos tickets roteados pelo fluxo completo no teste, com o intervalo de 95%"
       },
       "rework_minutes": {
         "low": 5,
@@ -745,59 +745,59 @@
     },
     "scenarios": {
       "pessimistic": {
-        "hours_per_month": 7.515283191826228,
-        "brl_per_month": 263.03491171391795,
-        "fte_at_160_hours": 0.04697051994891392
+        "hours_per_month": 6.572370559735593,
+        "brl_per_month": 230.03296959074575,
+        "fte_at_160_hours": 0.041077315998347456
       },
       "base": {
-        "hours_per_month": 100.0451234448527,
-        "brl_per_month": 4502.030555018372,
-        "fte_at_160_hours": 0.6252820215303294
+        "hours_per_month": 68.3297879198092,
+        "brl_per_month": 3074.840456391414,
+        "fte_at_160_hours": 0.42706117449880754
       },
       "optimistic": {
-        "hours_per_month": 181.80135954329145,
-        "brl_per_month": 10908.081572597488,
-        "fte_at_160_hours": 1.1362584971455716
+        "hours_per_month": 157.90916295804632,
+        "brl_per_month": 9474.54977748278,
+        "fte_at_160_hours": 0.9869322684877895
       }
     },
     "sensitivity": [
       {
         "assumption": "triage_minutes",
-        "brl_at_low": 2069.715722297428,
-        "brl_at_high": 6934.345387739316,
-        "swing_brl": 4864.6296654418875
+        "brl_at_low": 1443.1444594855934,
+        "brl_at_high": 4706.536453297235,
+        "swing_brl": 3263.391993811642
       },
       {
         "assumption": "tickets_per_month",
-        "brl_at_low": 1271.3734287371883,
-        "brl_at_high": 4502.030555018372,
-        "swing_brl": 3230.657126281184
+        "brl_at_low": 868.3349448849353,
+        "brl_at_high": 3074.840456391414,
+        "swing_brl": 2206.505511506479
       },
       {
         "assumption": "hourly_cost_brl",
-        "brl_at_low": 3501.5793205698446,
-        "brl_at_high": 6002.707406691163,
-        "swing_brl": 2501.128086121318
+        "brl_at_low": 2391.5425771933224,
+        "brl_at_high": 4099.7872751885525,
+        "swing_brl": 1708.2446979952301
       },
       {
         "assumption": "auto_route_share",
-        "brl_at_low": 3470.483005366726,
-        "brl_at_high": 5153.03974380308,
-        "swing_brl": 1682.5567384363535
+        "brl_at_low": 2826.666666666667,
+        "brl_at_high": 4530.264939083349,
+        "swing_brl": 1703.5982724166824
       },
       {
         "assumption": "rework_minutes",
-        "brl_at_low": 4683.330110230129,
-        "brl_at_high": 4139.431444594856,
-        "swing_brl": 543.8986656352736
+        "brl_at_low": 3169.1162251015285,
+        "brl_at_high": 2886.288918971187,
+        "swing_brl": 282.82730613034164
       },
       {
         "assumption": "misroute_rate",
-        "brl_at_low": 4565.7545768364525,
-        "brl_at_high": 4425.22301875184,
-        "swing_brl": 140.5315580846127
+        "brl_at_low": 3119.250853705339,
+        "brl_at_high": 3017.167440782009,
+        "swing_brl": 102.08341292332989
       }
     ],
-    "base_brl_per_month": 4502.030555018372
+    "base_brl_per_month": 3074.840456391414
   }
 }

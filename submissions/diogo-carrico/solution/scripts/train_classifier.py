@@ -31,6 +31,7 @@ from support_triage.classifier import (
 )
 from support_triage.classifier import vocabulary_coverage as word_coverage
 from support_triage.paths import IT_TICKETS_DIR, OUTPUTS_DIR, TICKETS_DIR
+from support_triage.policy import NEVER_AUTOMATED_CLASSES
 from support_triage.triage import triage
 
 OUT = OUTPUTS_DIR / "classifier"
@@ -43,6 +44,51 @@ TRIAGE_MINUTES, REWORK_MINUTES = 4, 10  # base values of the waste model
 def vocabulary_coverage(texts: pd.Series, vocab: set[str]) -> np.ndarray:
     """Share of each text's content words that the model saw in training (same rule as the demo)."""
     return np.array([word_coverage(s, vocab) for s in texts])
+
+
+def reason_group(decision) -> str:
+    """Why a ticket went to a person, in five groups."""
+    r = decision.reason
+    if r.startswith("Política"):
+        return "Política"
+    if r.startswith("Fora"):
+        return "Fora do domínio"
+    if r.startswith("Classe nunca"):
+        return "Classe nunca roteada sozinha"
+    if "em piloto" in r:
+        return "Classe em piloto"
+    return "Confiança abaixo do limiar"
+
+
+def end_to_end(texts: pd.Series, labels: np.ndarray, artifact: dict) -> dict:
+    """Every ticket through the full triage (policy, guard, classifier, thresholds, enabled classes)."""
+    decisions = [triage(t, artifact) for t in texts]
+    routed = np.array([dec.decision == "rotear" for dec in decisions])
+    queue = np.array([dec.queue for dec in decisions])
+    correct = queue == labels
+    return {
+        **routed_quality(routed, correct),
+        "routed_by_class": {
+            c: {
+                "routed": int((routed & (queue == c)).sum()),
+                **{
+                    k: v
+                    for k, v in routed_quality(
+                        routed[queue == c], correct[queue == c]
+                    ).items()
+                    if k not in ("coverage", "routed")
+                },
+            }
+            for c in artifact["enabled_classes"]
+        },
+        "to_people_by_reason": pd.Series(
+            [reason_group(dec) for dec in decisions if dec.decision == "humano"]
+        )
+        .value_counts()
+        .to_dict(),
+        "_routed": routed,
+        "_queue": queue,
+    }
 
 
 def main() -> None:
@@ -232,11 +278,48 @@ def main() -> None:
             ),
         },
     }
+    # A class routes on its own only if the test confirmed the target: lower bound of the 95% interval >= 95%.
+    # The pilot must confirm it again, since the test chose the classes.
+    test_per_class = result["thresholds"]["test_per_class_at_per_class_thresholds"]
+    enabled = [
+        c
+        for c, v in test_per_class.items()
+        if v["routed"] and v["precision_ci95"][0] >= TARGET_PRECISION
+    ]
     artifact = {
         "model": calibrated,
         "thresholds": t_class,
         "guard": guard,
         "vocabulary": vocab,
+        "enabled_classes": enabled,
+        "target_precision": TARGET_PRECISION,
+    }
+
+    # End to end on the Dataset 2 test set: the numbers the prototype actually delivers.
+    e2e = end_to_end(xs["test"], ys["test"], artifact)
+    routed_t, queue_t = e2e.pop("_routed"), e2e.pop("_queue")
+    admin = ys["test"] == "Administrative rights"
+    leaked = admin & routed_t
+    e2e["administrative_rights_routed_elsewhere"] = {
+        "true_administrative_rights": int(admin.sum()),
+        "routed_on_their_own": int(leaked.sum()),
+        "by_queue": pd.Series(queue_t[leaked]).value_counts().to_dict(),
+        "texts": [str(t) for t in xs["test"][leaked]],
+    }
+    # If the pilot confirms every class except the never-automated one.
+    all_classes = {
+        **artifact,
+        "enabled_classes": [c for c in t_class if c not in NEVER_AUTOMATED_CLASSES],
+    }
+    if_pilot = end_to_end(xs["test"], ys["test"], all_classes)
+    for k in ("_routed", "_queue", "routed_by_class"):
+        if_pilot.pop(k)
+    result["end_to_end_dataset2_test"] = {
+        "enabled_classes": enabled,
+        "enabling_rule": "limite inferior do IC 95% da precisão no teste >= 95%",
+        "note": "O texto do Dataset 2 já vem pré-processado; a política roda sobre ele",
+        **e2e,
+        "if_every_class_is_enabled": if_pilot,
     }
 
     # End to end: every Dataset 1 ticket through the full triage (policy, guard, classifier, thresholds).
@@ -249,13 +332,7 @@ def main() -> None:
         .value_counts()
         .to_dict(),
         "to_people_by_reason": pd.Series(
-            [
-                d.reason.split(":")[0]
-                if d.reason.startswith(("Política", "Fora", "Classe"))
-                else "Confiança abaixo do limiar"
-                for d in decisions
-                if d.decision == "humano"
-            ]
+            [reason_group(d) for d in decisions if d.decision == "humano"]
         )
         .value_counts()
         .to_dict(),

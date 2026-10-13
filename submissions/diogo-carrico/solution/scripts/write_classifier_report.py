@@ -44,6 +44,8 @@ def main() -> None:
         r["thresholds"],
         r["domain_shift_dataset1"],
     )
+    full = r["end_to_end_dataset2_test"]
+    enabled = full["enabled_classes"]
     nd, sizes = data["near_duplicates"], data["split_sizes"]
     pcq = th["test_at_per_class_thresholds"]
     single = th["test_at_precision_threshold"]
@@ -89,13 +91,14 @@ def main() -> None:
         f"| Limiar único escolhido para 95% de precisão | {d(th['precision_threshold'], 3)} | {pct(single['coverage'])} | {pct(single['precision'])} ({ci(single['precision_ci95'])}) | "
         + "; ".join(f"{c} com {pct(v['precision'])}" for c, v in weak_single.items())
         + " |",
-        f"| **Limiares por classe** (adotado) | um por classe | **{pct(pcq['coverage'])}** | **{pct(pcq['precision'])}** ({ci(pcq['precision_ci95'])}) | {', '.join(never)} nunca é roteado |",
+        f"| Limiares por classe, só o classificador | um por classe | {pct(pcq['coverage'])} | {pct(pcq['precision'])} ({ci(pcq['precision_ci95'])}) | Três classes sem prova de 95% no teste |",
+        f"| **Fluxo completo da demo** (adotado) | um por classe | **{pct(full['coverage'])}** | **{pct(full['precision'])}** ({ci(full['precision_ci95'])}) | Só {len(enabled)} classes roteiam sozinhas até o piloto |",
         f"| Limiar pelo custo do erro ({th['cost_threshold_inputs']['triage_minutes']} min de triagem contra {th['cost_threshold_inputs']['rework_minutes']} min de retrabalho) | {d(th['cost_threshold'], 2)} | {pct(costq['coverage'])} | {pct(costq['precision'])} ({ci(costq['precision_ci95'])}) | Abaixo dos 95% exigidos |",
     ]
 
     thr_rows = [
-        "| Classe | Limiar | Previstos | Roteados | Precisão (IC 95%) |",
-        "| --- | --- | --- | --- | --- |",
+        "| Classe | Limiar | Previstos | Acima do limiar | Precisão (IC 95%) | Na demo |",
+        "| --- | --- | --- | --- | --- | --- |",
     ]
     for c, v in th["test_per_class_at_per_class_thresholds"].items():
         t = th["per_class_thresholds"][c]
@@ -104,8 +107,15 @@ def main() -> None:
             if not v["routed"]
             else f"{pct(v['precision'])} ({ci(v['precision_ci95'])})"
         )
+        status = (
+            "nunca roteada"
+            if t >= 1.0
+            else "roteia sozinha"
+            if c in enabled
+            else "em piloto"
+        )
         thr_rows.append(
-            f"| {c} | {'—' if t >= 1.0 else d(t, 2)} | {n(v['predicted'])} | {n(v['routed'])} | {prec} |"
+            f"| {c} | {'—' if t >= 1.0 else d(t, 2)} | {n(v['predicted'])} | {n(v['routed'])} | {prec} | {status} |"
         )
 
     e2e = dom["end_to_end"]
@@ -113,31 +123,49 @@ def main() -> None:
     shares = ", ".join(
         f"{c} {pct(v)}" for c, v in list(dom["predicted_class_shares"].items())[:3]
     )
-    below = {
-        c: v
+    pilot = [
+        c
         for c, v in th["test_per_class_at_per_class_thresholds"].items()
-        if v["routed"] and v["precision"] < th["target_precision"]
-    }
-    below_note = "".join(
-        f"\n\n{c} ficou em {pct(v['precision'])} no teste, abaixo do alvo, embora a validação garantisse {pct(th['target_precision'], 0)}: "
-        f"é variação de amostra, e o intervalo vai de {ci(v['precision_ci95'])}. No piloto, a precisão de cada classe é acompanhada "
-        "e o limiar sobe se ela ficar abaixo do alvo."
-        for c, v in below.items()
+        if v["routed"] and c not in enabled
+    ]
+    below_note = (
+        f"\n\nA validação garantia {pct(th['target_precision'], 0)} para todas as classes, mas no teste o limite inferior ficou abaixo do alvo em "
+        + ", ".join(
+            f"{c} ({pct(th['test_per_class_at_per_class_thresholds'][c]['precision_ci95'][0])})"
+            for c in pilot
+        )
+        + ". Essas classes ficam **em piloto**: a demo manda os tickets delas para a triagem humana, mesmo acima do limiar, "
+        "até o piloto provar a precisão com tickets novos. Como o teste escolheu as classes habilitadas, o piloto também precisa confirmá-las."
     )
+
+    full_rows = [
+        "| Classe | Roteados sozinhos | Precisão (IC 95%) |",
+        "| --- | --- | --- |",
+    ] + [
+        f"| {c} | {n(v['routed'])} | {pct(v['precision'])} ({ci(v['precision_ci95'])}) |"
+        for c, v in full["routed_by_class"].items()
+    ]
+    reason_rows = ["| Por que foi para uma pessoa | Tickets |", "| --- | --- |"] + [
+        f"| {k} | {n(v)} |" for k, v in full["to_people_by_reason"].items()
+    ]
+    adm = full["administrative_rights_routed_elsewhere"]
+    adm_queues = ", ".join(f"{q} {n(k)}" for q, k in adm["by_queue"].items())
+    adm_texts = "\n".join(f"- “{t[:160]}”" for t in adm["texts"])
+    if_all = full["if_every_class_is_enabled"]
 
     md = f"""# Classificador de tickets
 
 > Gerado por `solution/scripts/write_classifier_report.py` a partir de `solution/outputs/classifier/`.
 > Não editar à mão: rode `uv run python scripts/train_classifier.py` e depois este script.
 
-Um classificador TF-IDF + SVM linear acerta {pct(test["accuracy"])} dos tickets de TI do Dataset 2 (macro-F1 {pct(test["macro_f1"])}). Com um limiar por classe, ele roteia sozinho {pct(pcq["coverage"])} dos tickets com {pct(pcq["precision"])} de precisão, e o resto vai para a triagem humana. Nos tickets do Dataset 1, de outra operação, ele não serve: a política, o guarda de vocabulário e os limiares mandam {pct(1 - dom["end_to_end"]["share_routed"])} deles para humanos.
+Um classificador TF-IDF + SVM linear acerta {pct(test["accuracy"])} dos tickets de TI do Dataset 2 (macro-F1 {pct(test["macro_f1"])}). A demo completa (política, guarda de domínio, limiar por classe e só as classes que provaram 95% de precisão no teste) roteia sozinha {pct(full["coverage"])} dos tickets de teste com {pct(full["precision"])} de precisão (IC 95% {ci(full["precision_ci95"])}), e o resto vai para a triagem humana. Nos tickets do Dataset 1, de outra operação, ele não serve: a política, o guarda de vocabulário e os limiares mandam {pct(1 - dom["end_to_end"]["share_routed"])} deles para humanos.
 
 ## Dados e divisão
 
 - {n(data["rows"])} tickets em {len(data["classes"])} classes.
 - Quase-duplicatas (similaridade de cosseno TF-IDF de pelo menos {d(nd["similarity_threshold"], 1)}): {n(nd["groups_with_more_than_one_ticket"])} grupos com {n(nd["tickets_in_those_groups"])} tickets. Cada grupo fica inteiro de um lado da divisão, para o teste não ver textos quase iguais aos do treino.
 - {n(nd["groups_with_conflicting_labels"])} desses grupos ({n(nd["tickets_in_conflicting_groups"])} tickets) têm rótulos diferentes para textos quase iguais. É a primeira evidência de ruído de rótulo (X1); a lista está em `solution/outputs/classifier/near_duplicate_conflicts.csv`.
-- Divisão estratificada: treino {n(sizes["train"])}, calibração {n(sizes["calibration"])}, escolha de limiar {n(sizes["validation"])} e teste {n(sizes["test"])}. O teste foi usado uma única vez, no fim.
+- Divisão estratificada: treino {n(sizes["train"])}, calibração {n(sizes["calibration"])}, escolha de limiar {n(sizes["validation"])} e teste {n(sizes["test"])}. O teste foi usado uma única vez, no fim; ele também decidiu quais classes roteiam sozinhas, então o piloto precisa confirmá-las.
 
 ## Escolha do modelo
 
@@ -166,6 +194,22 @@ O alvo é o da hipótese 3.2 do Diogo: pelo menos 95% de precisão nos tickets q
 Limiares por classe, medidos no teste:
 
 {chr(10).join(thr_rows)}{below_note}
+
+## Fluxo completo da demo no teste
+
+Cada um dos {n(sizes["test"])} tickets de teste passou pela mesma função da demo (`support_triage.triage`): política, guarda, classificador, limiar e classes habilitadas. É esse o número que vale para a proposta. O texto do Dataset 2 já vem pré-processado, então a política roda sobre ele como está.
+
+Roteados sozinhos: {n(full["routed"])} ({pct(full["coverage"])}), com {pct(full["precision"])} de precisão (IC 95% {ci(full["precision_ci95"])}).
+
+{chr(10).join(full_rows)}
+
+{chr(10).join(reason_rows)}
+
+Se o piloto comprovar todas as classes menos {", ".join(never)}, o mesmo fluxo roteia {pct(if_all["coverage"])} com {pct(if_all["precision"])} de precisão (IC 95% {ci(if_all["precision_ci95"])}).
+
+**Pedidos de privilégio fora da classe Administrative rights.** Bloquear a classe prevista não basta: um pedido de privilégio previsto como outra classe seria roteado sozinho. No teste, {n(adm["routed_on_their_own"])} dos {n(adm["true_administrative_rights"])} tickets rotulados como Administrative rights foram roteados sozinhos ({adm_queues}). Os textos estão abaixo; lidos um a um, relatam falhas (patch, atualização do Windows, boot, monitor, publicação de vagas), sem pedido de acesso ou de privilégio, o que sugere ruído de rótulo (X1). Ainda assim, no piloto todo ticket roteado sozinho que um agente reclassificar como pedido de privilégio conta como violação da política.
+
+{adm_texts}
 
 ## Desvio de domínio: o modelo nos tickets do Dataset 1
 

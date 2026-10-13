@@ -1,8 +1,8 @@
 # 00 — Hipóteses antes de abrir os dados
 
-> Escrito por mim, antes de abrir qualquer linha dos datasets.
+> Registrado antes de abrir qualquer linha dos datasets. As perguntas foram preparadas pela IA; os insights, palpites e previsões das respostas são meus, e a IA elaborou o texto a partir deles.
 > Commit deste arquivo: ver `git log -- process-log/00-hipoteses.md` (a data do commit é a prova).
-> Respostas curtas, nas minhas palavras. Não usar IA para redigir este arquivo.
+> Correção de 13/10/2026, depois de uma avaliação externa: a versão commitada dizia "Não usar IA para redigir este arquivo", o que não descrevia como o texto foi feito. As respostas não mudaram.
 
 ## 0. O que eu já sei antes de começar
 

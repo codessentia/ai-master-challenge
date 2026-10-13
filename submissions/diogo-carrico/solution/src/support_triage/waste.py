@@ -71,28 +71,27 @@ ASSUMPTIONS: dict[str, Assumption] = {
 def with_measured_routing(
     metrics: dict, assumptions: dict[str, Assumption] = ASSUMPTIONS
 ) -> dict[str, Assumption]:
-    """Replace the assumed routing share and misroute rate with what the classifier measured on the test set
-    (per-class thresholds). The range keeps the alternatives: Diogo's prediction P5 and the single-threshold rule."""
-    th = metrics["thresholds"]
-    per_class = th["test_at_per_class_thresholds"]
-    single = th["test_at_precision_threshold"]
-    lo_prec, hi_prec = per_class["precision_ci95"]
+    """Replace the assumed routing share and misroute rate with what the full triage flow measured on the
+    test set (policy, guard, classifier, thresholds, enabled classes). The high side is the same flow if the
+    pilot confirms every class; the low side keeps the original premise."""
+    e2e = metrics["end_to_end_dataset2_test"]
+    lo_prec, hi_prec = e2e["precision_ci95"]
     out = dict(assumptions)
     out["auto_route_share"] = Assumption(
-        assumptions["auto_route_share"].base,
-        per_class["coverage"],
-        single["coverage"],
+        min(assumptions["auto_route_share"].low, e2e["coverage"]),
+        e2e["coverage"],
+        e2e["if_every_class_is_enabled"]["coverage"],
         "fração",
-        "Medido no Dataset 2 (tickets de TI): cobertura no teste com limiares por classe. Numa operação de suporte "
-        "ao cliente só vale depois de treinar com os tickets dela. Baixo: previsão P5 do Diogo. "
-        "Alto: limiar único, que deixa Hardware abaixo de 95% de precisão",
+        "Medido no Dataset 2 (tickets de TI): fluxo completo da demo no teste, só com as classes que provaram 95% "
+        "de precisão. Numa operação de suporte ao cliente só vale depois de treinar com os tickets dela. "
+        "Baixo: premissa original. Alto: o mesmo fluxo se o piloto comprovar as classes que faltam",
     )
     out["misroute_rate"] = Assumption(
         1 - hi_prec,
-        1 - per_class["precision"],
+        1 - e2e["precision"],
         1 - lo_prec,
         "fração",
-        "Medido no Dataset 2: 1 − precisão dos tickets roteados no teste, com o intervalo de 95%",
+        "Medido no Dataset 2: 1 − precisão dos tickets roteados pelo fluxo completo no teste, com o intervalo de 95%",
     )
     return out
 

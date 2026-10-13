@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-O Dataset 1 é sintético e não sustenta um diagnóstico de tempo nem de satisfação: nenhum gargalo e nenhum fator de satisfação resistem a testes estatísticos, e o próprio brief erra o volume (8.469 tickets, não 30 mil) e os tipos de ticket (5, não 3). Por isso o diagnóstico vira uma lista do que medir numa operação real, e o desperdício é estimado com premissas rotuladas: cerca de 100 horas de triagem por mês. A automação proposta roteia sozinha 64,9% dos tickets com 97,0% de precisão e manda para pessoas tudo o que envolve dinheiro, contrato, segurança ou risco, e tudo o que o modelo não conhece. A recomendação é instrumentar a operação e fazer um piloto em modo sombra antes de automatizar qualquer fila.
+O Dataset 1 é sintético e não sustenta um diagnóstico de tempo nem de satisfação: nenhum gargalo e nenhum fator de satisfação resistem a testes estatísticos, e o próprio brief erra o volume (8.469 tickets, não 30 mil) e os tipos de ticket (5, não 3). Por isso o diagnóstico vira uma lista do que medir numa operação real, e o desperdício é estimado com premissas rotuladas: cerca de 68 horas de triagem por mês. A demo da automação, medida de ponta a ponta nos tickets de teste de TI, roteia sozinha 43,5% dos tickets com 97,7% de precisão, só nas 4 classes que provaram 95%, e manda para pessoas tudo o que envolve dinheiro, contrato, segurança ou risco, e tudo o que o modelo não conhece. A recomendação é instrumentar a operação e fazer um piloto em modo sombra antes de automatizar qualquer fila.
 
 Resumo para o conselho técnico: [`docs/sumario-executivo.md`](docs/sumario-executivo.md).
 
@@ -47,7 +47,7 @@ O Dataset 1 é sintético: `{product_purchased}` em 100% das descrições, resol
 
 1. **Onde o fluxo trava?** Em nenhum ponto detectável. Em 36 testes (4 indicadores em 9 cortes), o menor p corrigido é 0,86. A "pior combinação" de canal, prioridade e tipo é do tamanho que o sorteio produz. Os testes teriam detectado um canal com 3,4 pontos percentuais a mais de tickets sem solução.
 2. **O que impacta a satisfação?** Nada mensurável: as 8 variáveis têm q = 0,83, e um modelo com todas elas erra mais do que chutar a média.
-3. **Quanto estamos desperdiçando?** Não dá para medir com esta base. A estimativa paramétrica dá 100 horas de triagem recuperáveis por mês (R$ 4.502), numa faixa de 8 a 182 horas, com todas as premissas rotuladas. Triagem é a menor parte do problema: o tempo some em transferências e espera, que a base não registra.
+3. **Quanto estamos desperdiçando?** Não dá para medir com esta base. A estimativa paramétrica dá 68 horas de triagem recuperáveis por mês (R$ 3.075), numa faixa de 7 a 158 horas, com todas as premissas rotuladas. Triagem é a menor parte do problema: o tempo some em transferências e espera, que a base não registra.
 
 **Proposta de automação** ([`docs/proposta-automacao.md`](docs/proposta-automacao.md))
 
@@ -58,23 +58,31 @@ flowchart TD
     B -- não --> C{"Guarda de domínio:<br/>o modelo conhece as palavras?"}
     C -- não --> H["Triagem humana"]
     C -- sim --> D["Classificador"]
-    D --> E{"Confiança acima do<br/>limiar da classe?"}
+    D --> E{"Confiança acima do limiar<br/>e classe já comprovada?"}
     E -- não --> H
-    E -- sim --> F["Fila da classe<br/>64,9% dos tickets, 97,0% de precisão"]
+    E -- sim --> F["Fila da classe<br/>43,5% dos tickets, 97,7% de precisão"]
     H --> G["Agente resolve e corrige a classe"]
     F --> G
     P --> G
-    G --> M[("Monitoramento e retreino")]
+    G -.-> M[("Piloto: correções,<br/>monitoramento e retreino")]
     M -.-> D
 ```
 
 **Protótipo** ([`docs/classificador.md`](docs/classificador.md))
 
 - TF-IDF + SVM linear, escolhido entre 7 modelos: **86,7% de acurácia** no teste (IC 95% 85,8% a 87,6%), macro-F1 86,5%.
-- Com limiares por classe, roteia sozinho **64,9% dos tickets com 97,0% de precisão** (IC 95% 96,4% a 97,5%). Um limiar único rotearia 74,2%, mas deixaria Hardware em 92,9%.
-- Administrative rights nunca é roteado sozinho: concessão de privilégio é decisão humana, e a classe não alcança 95% com confiança.
+- **Fluxo completo da demo** (política, guarda, limiar e classes habilitadas), medido nos 5.171 tickets de teste: roteia sozinho **43,5% dos tickets com 97,7% de precisão** (IC 95% 97,0% a 98,2%). O classificador sozinho, com limiares por classe, rotearia 64,9% com 97,0%, mas três classes não provaram 95% no teste.
+- **Classes habilitadas:** Access, Hardware, Miscellaneous e Purchase roteiam sozinhas. HR Support, Internal Project e Storage ficaram com o limite inferior da precisão abaixo de 95% no teste e esperam o piloto; se ele as confirmar, a cobertura sobe para 64,1%.
+- Administrative rights nunca é roteado sozinho: concessão de privilégio é decisão humana, e a classe não alcança 95% com confiança. Bloquear a classe prevista não basta, então medi o vazamento: dos 176 tickets rotulados como Administrative rights no teste, 5 foram roteados sozinhos para Hardware, e nenhum deles pede acesso ou privilégio (são falhas de patch, atualização, boot, monitor e publicação de vagas).
 - Nos tickets do Dataset 1, de outra operação, a política, o guarda e os limiares mandam 98,1% para pessoas; os 1,9% que passariam mostram por que o modelo precisa ser retreinado com tickets da operação.
-- O piloto precisa observar 414 tickets roteados para provar 95% de precisão no geral, cerca de uma semana no volume do brief.
+- O piloto precisa observar 230 tickets roteados para provar 95% de precisão no geral, menos de uma semana no volume do brief.
+
+| Funciona hoje | Fica para o piloto |
+| --- | --- |
+| Política, guarda de domínio, classificador e limiares, numa demo de linha de comando (um texto ou um CSV) | Integração com o sistema de tickets |
+| Retreino manual, rodando `train_classifier.py` | Correção da fila pelo agente, registro das decisões, monitoramento semanal e retreino com as correções |
+
+Detalhes em [`docs/proposta-automacao.md`](docs/proposta-automacao.md).
 
 **Custos** (preços de lista conferidos em 13/10/2026; dólar a R$ 5,0096, PTAX de venda)
 
@@ -89,7 +97,7 @@ O que se compra faz mais do que rotear (responde o cliente, resume tickets), ent
 
 1. **Instrumentar a operação** antes de otimizar: abertura do ticket, transferências e motivo, tempo esperando cliente ou outra equipe, reabertura e taxa de resposta à pesquisa de satisfação.
 2. **Retreinar o classificador com tickets da própria operação**, em português. O modelo atual aprendeu com tickets de TI de outra organização.
-3. **Piloto em três fases**: sombra (a IA classifica em silêncio), assistida (o agente confirma com um clique) e automática por fila, só para as classes que provarem 95% de precisão.
+3. **Piloto em três fases**: sombra (a IA classifica em silêncio), assistida (o agente confirma ou corrige a fila) e automática por fila, só para as classes que provarem 95% de precisão.
 4. **Nunca automatizar** os casos da política: dinheiro, cancelamento, cobrança indevida, risco jurídico, segurança, dados pessoais, risco físico e tentativas de manipular a IA.
 5. **Antes de construir, verificar o helpdesk atual.**
 
@@ -98,7 +106,7 @@ O que se compra faz mais do que rotear (responde o cliente, resume tickets), ent
 - O Dataset 1 é sintético: não diz nada sobre uma operação real.
 - O Dataset 2 é de TI, de outra organização, em inglês e já pré-processado; a precisão medida não vale direto para suporte ao cliente.
 - Os minutos de triagem por ticket, a premissa que mais pesa na estimativa de desperdício, nunca foram medidos.
-- Storage ficou em 94,5% de precisão no teste, abaixo do alvo; o limiar dele precisa subir antes do piloto.
+- HR Support, Internal Project e Storage não provaram 95% de precisão no teste e ficam em piloto. Como foi o teste que decidiu quais classes roteiam sozinhas, o piloto também precisa confirmar as quatro habilitadas.
 - Ficaram fora, como sugestão, a revisão humana de rótulos, os rascunhos de resposta com LLM e o teste em português ([`docs/proximos-passos.md`](docs/proximos-passos.md)).
 
 ### Como rodar
@@ -123,13 +131,13 @@ Os relatórios em `docs/` são regenerados pelos scripts `write_*_report.py`.
 
 | Decisões registradas | Erros da IA registrados | Previsões feitas antes dos dados | Commits | Testes |
 | --- | --- | --- | --- | --- |
-| 15 ([decisoes.md](process-log/decisoes.md)) | 14 ([erros-da-ia.md](process-log/erros-da-ia.md)) | 8 ([previsoes-resultados.md](process-log/previsoes-resultados.md)) | ver `git log` | 41 |
+| 16 ([decisoes.md](process-log/decisoes.md)) | 15 ([erros-da-ia.md](process-log/erros-da-ia.md)) | 8 ([previsoes-resultados.md](process-log/previsoes-resultados.md)) | ver `git log` | 42 |
 
 ### Ferramentas usadas
 
 | Ferramenta | Para que usei |
 | --- | --- |
-| Claude Code (app desktop) | Todo o trabalho: análise, código, relatórios, git |
+| Claude Code (app desktop) | Análise, código, relatórios e git; e o texto das respostas de [`00-hipoteses.md`](process-log/00-hipoteses.md), elaborado a partir dos meus insights |
 | Workflows de subagentes do Claude Code | Pesquisa de preços com verificação independente e análise dos 184 PRs públicos |
 | Claude Artifacts e Docs | Apresentação inicial dos 4 desafios e termos de referência do projeto |
 
@@ -145,19 +153,20 @@ Os relatórios em `docs/` são regenerados pelos scripts `write_*_report.py`.
 
 ### Onde a IA errou e como corrigi
 
-Os 14 erros estão em [`process-log/erros-da-ia.md`](process-log/erros-da-ia.md). Os principais:
+Os 15 erros estão em [`process-log/erros-da-ia.md`](process-log/erros-da-ia.md). Os principais:
 
 - **O plano inicial tinha 10 entregas** e usava dados que depois se mostraram sintéticos (E01 a E03). A revisão dos PRs que eu pedi mostrou o problema.
 - **O escopo voltou a crescer** depois do primeiro corte (E12). Fui eu que percebi: "to achando que complicamos demais".
 - **O modelo de 12,5 MB quase entrou no commit**, apesar do `.gitignore` (E11). Agora o `stage.sh` recusa arquivos acima de 2 MB.
 - **O guarda de domínio barrou um ticket legítimo** por causa da palavra "my" (E13). Corrigido, com o efeito medido e registrado.
+- **O número divulgado não era o do fluxo completo** (E15): os 64,9% mediam só o classificador, sem a política, o guarda e a exigência de 95% por classe. Uma avaliação externa apontou; agora os números vêm da demo inteira.
 - **Teste estatístico errado** para a idade (E09) e **contagens erradas** na síntese dos PRs (E06), pegos na revisão.
 
 ### O que eu adicionei que a IA sozinha não faria
 
 - **A escolha do desafio e a leitura do brief**: tratei o protótipo como obrigatório quando o brief se contradiz.
 - **Olhar o que já existe antes de construir**: a revisão dos PRs mudou o plano e evitou repetir o que 38 candidatos já tinham feito.
-- **Hipóteses e previsões comprometidas antes dos dados**, conferidas depois: acertei a contagem de tickets (P1), a correlação nula (P2) e a acurácia (P3); errei a categoria mais difícil (2.2) e subestimei a cobertura (P5).
+- **Hipóteses e previsões comprometidas antes dos dados**, conferidas depois: acertei a contagem de tickets (P1), a correlação nula (P2) e a acurácia (P3); errei a categoria mais difícil (2.2) e a cobertura (P5: previ 50%, e o fluxo completo roteia 43,5%).
 - **A exigência de 95% de precisão olhando por categoria** (hipótese 3.2), que levou aos limiares por classe; com um limiar único, Hardware ficaria abaixo do alvo.
 - **Não automatizar concessão de privilégio** (hipótese 3.1): os dados chegaram à mesma conclusão sobre Administrative rights.
 - **A experiência de operação** (hipótese 0.2): o tempo some em transferências e espera, não na triagem. Isso orientou a leitura do desperdício e a recomendação de instrumentar.
